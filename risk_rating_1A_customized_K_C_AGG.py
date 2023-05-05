@@ -82,6 +82,7 @@ for i in range(len(valid_risk_source_name_A)):  # Replace with the actual number
 obtain the vector for a specific risk source given its name. The dictionary created is a useful data structure to have, 
 but it does not provide an easy way to retrieve a specific vector given a specific risk source name."""
 
+
 # Convert the list of vectors to a numpy array
 # the rows represent the risk sources and the columns represent the 300 dimensions from Word2Vec
 # (113 risk sources, 300 dimensions) (12 risk sources omitted)
@@ -143,7 +144,7 @@ models = {'SVR-RBF': SVR(kernel='rbf'),
 
 # Define the k-fold cross validation parameters
 n_splits = 10
-n_repeats = 1000
+n_repeats = 1
 rkf = RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=42)
 
 # create a list of dictionaries to stores the results. (useful to convert/store the results to a different format)
@@ -181,4 +182,3 @@ results_df_A = pd.DataFrame(results_list_A, index=range(len(results_list_A)))
 
 # Save the results dataframe to a csv file
 # results_df.to_csv('results_df_1000_customized_1A_AGG.csv', index=False)
-

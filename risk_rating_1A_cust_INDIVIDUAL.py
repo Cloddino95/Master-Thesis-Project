@@ -10,7 +10,7 @@
 
 import gensim
 from gensim.models import KeyedVectors
-# import gensim.downloader as api
+import gensim.downloader as api
 from Dataset import risk_ratings_1A
 import numpy as np
 import pandas as pd
@@ -29,10 +29,10 @@ from tqdm import tqdm  # to show the progress bar
 corresponding Word2Vec vectors, you can follow these steps:"""
 
 # 1) Load the Word2Vec model using Gensim:
-# model = api.load('word2vec-google-news-300')
+model = api.load('word2vec-google-news-300')
 
 # Save the model to disk
-# model.save('word2vec-google-news-300.bin')
+model.save('word2vec-google-news-300.bin')
 
 # Load the model from disk
 model = gensim.models.KeyedVectors.load('word2vec-google-news-300.bin')

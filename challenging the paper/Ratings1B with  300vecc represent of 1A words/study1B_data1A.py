@@ -1,14 +1,7 @@
-# Feature: Forecasting New Risk Sources and associated values
-# Scenario: Predicting the Value of New Risk Sources
-# Given 79 participants have rated 125 existing risk sources
-# And each existing risk source has a value ranging from -100 (safe) to +100 (risky)
-# When a new risk source is identified
-# And it has not been previously rated by any of the 73 participants
-# Then the value of the new risk source can be predicted using a machine learning model trained on the existing risk sources and their values
-# And the predicted value can be used to determine the level of risk people associate with the new risk source.
+# here I am using the ratings from the 1B dataset that will be forecasted by the 300-vector representation of the words in 1A dataset
 
 from gensim.models import KeyedVectors
-from Dataset import risk_ratings_1B
+from Dataset import risk_ratings_1B, risk_ratings_1A
 import numpy as np
 import gensim
 # import gensim.downloader as api
@@ -18,8 +11,11 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.svm import SVR
 from sklearn.model_selection import cross_val_score, RepeatedKFold
 from tqdm import tqdm
+import sys
 
-model = gensim.models.KeyedVectors.load('word2vec-google-news-300.bin')
+# this initial part is needed only to get the words in "risk_source_name_B" for the rating but the rest is not used (the 300-vec is not used)
+model = gensim.models.KeyedVectors.load(
+    '/Users/ClaudioProiettiMercuri_1/Desktop/MS_Business intelligence/thesis/Datenmodell Bhatia/Thesis_Clo/word2vec-google-news-300.bin')
 
 risk_source_name_B = risk_ratings_1B.iloc[0].values.tolist()
 risk_source_name_B = [word.replace(' ', '_') for word in risk_source_name_B]
@@ -35,6 +31,7 @@ risk_source_vector_B = [model[word] for word in valid_risk_source_name_B]
 
 dict_risk_source_vectors_B = dict(zip(valid_risk_source_name_B, risk_source_vector_B))
 
+"""the below i would not need for the present exercise"""
 def get_vector_for_source_i(a):
     source_name = valid_risk_source_name_B[a]
     return dict_risk_source_vectors_B[source_name]
@@ -50,7 +47,8 @@ mat_xi_300dimB = np.array(xi_vectors_B)
 data_300dimB = mat_xi_300dimB.copy()
 
 data_300dimB = pd.DataFrame(data_300dimB, index=valid_risk_source_name_B)
-
+# ---------------------------------------------------------------RATINGS------------------------------------------------
+# so in this part I get the ratings from the 1B dataset and I add them to the 300dim vector representation of the words in 1A
 risk_ratings_1B_small = risk_ratings_1B.copy()
 
 risk_ratings_1B_small.columns = risk_source_name_B
@@ -66,9 +64,40 @@ risk_ratings_1B_small = risk_ratings_1B_small.astype(float)
 
 mean_rows = risk_ratings_1B_small.mean(axis=1)
 data_300dimB.insert(0, "mean_ratings", mean_rows)
+# ---------------------------------------------------------------END------------------------------------------------
+# ---------------------------------------------------------------1A vector source---------------------------------------
+risk_source_name_A = risk_ratings_1A.iloc[0].values.tolist()
+risk_source_name_A = [word.replace(' ', '_') for word in risk_source_name_A]
+# noinspection PyUnresolvedReferences
+vocab = model.key_to_index
+valid_risk_source_name_A = [word for word in risk_source_name_A if word in vocab]
+omitted_word_A = [word for word in risk_source_name_A if word not in valid_risk_source_name_A]
+risk_source_vector_A = [model[word] for word in valid_risk_source_name_A]
+dict_risk_source_vectors_A = dict(zip(valid_risk_source_name_A, risk_source_vector_A))
 
-X = data_300dimB.drop('mean_ratings', axis=1)
-y = data_300dimB['mean_ratings']
+def get_vector_for_source_i(a):
+    source_name = valid_risk_source_name_A[a]
+    return dict_risk_source_vectors_A[source_name]
+
+
+xi_vectors_A = []
+for i in range(len(valid_risk_source_name_A)):  # Replace with the actual number of risk sources I have
+    xi = get_vector_for_source_i(i)  # Replace with your own function to get the vector for source i
+    xi_vectors_A.append(xi)
+
+mat_xi_300dim_A = np.array(xi_vectors_A)
+data_300dim_A = mat_xi_300dim_A.copy()
+data_300dim_A = pd.DataFrame(data_300dim_A, index=valid_risk_source_name_A)
+# ---------------------------------------------------------------END------------------------------------------------
+# adding one observation since dataset A is 113 and dataset B is 114 (the word "cat" is added to A)
+meanratingB = mean_rows
+meanratingB = meanratingB.drop(meanratingB.index[-1])
+meanratingB = meanratingB.values
+data_300dim_A.insert(0, "mean_ratings_B", meanratingB.astype(float))
+
+X = data_300dim_A.drop('mean_ratings_B', axis=1)
+y = data_300dim_A['mean_ratings_B']
+
 
 # Define the values of the parameter C to evaluate (SVM, Lasso & Ridge) and K for KNN
 parameter_values = {
@@ -90,7 +119,7 @@ models = {'SVR-RBF': SVR(kernel='rbf'),
 
 # Define the k-fold cross validation parameters
 n_splits = 10
-n_repeats = 1
+n_repeats = 10
 rkf = RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=42)
 
 # create a list of dictionaries to stores the results. (useful to convert/store the results to a different format)
@@ -121,7 +150,7 @@ for model_name, model in tqdm(models.items()):
 
 
 # Convert the list of results to a pandas DataFrame with the appropriate index
-results_df_B = pd.DataFrame(results_list_B, index=range(len(results_list_B)))
+results_df_B_A = pd.DataFrame(results_list_B, index=range(len(results_list_B)))
 
 # Save the results dataframe to a csv file
-# results_df_B.to_csv('results_df_1000_customized_1B_AGG.csv', index=False)
+# results_df_B.to_csv('results_df_1000_customized_1B_AGG.csv', index=False) """

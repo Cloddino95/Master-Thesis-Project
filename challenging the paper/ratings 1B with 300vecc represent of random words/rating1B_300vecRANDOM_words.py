@@ -1,11 +1,4 @@
-# Feature: Forecasting New Risk Sources and associated values
-# Scenario: Predicting the Value of New Risk Sources
-# Given 79 participants have rated 125 existing risk sources
-# And each existing risk source has a value ranging from -100 (safe) to +100 (risky)
-# When a new risk source is identified
-# And it has not been previously rated by any of the 73 participants
-# Then the value of the new risk source can be predicted using a machine learning model trained on the existing risk sources and their values
-# And the predicted value can be used to determine the level of risk people associate with the new risk source.
+# here I am using the ratings from the 1B dataset to be forecasted by the 300-vector representation of RANDOM words
 
 from gensim.models import KeyedVectors
 from Dataset import risk_ratings_1B
@@ -19,7 +12,8 @@ from sklearn.svm import SVR
 from sklearn.model_selection import cross_val_score, RepeatedKFold
 from tqdm import tqdm
 
-model = gensim.models.KeyedVectors.load('word2vec-google-news-300.bin')
+model = gensim.models.KeyedVectors.load(
+    '/Users/ClaudioProiettiMercuri_1/Desktop/MS_Business intelligence/thesis/Datenmodell Bhatia/Thesis_Clo/word2vec-google-news-300.bin')
 
 risk_source_name_B = risk_ratings_1B.iloc[0].values.tolist()
 risk_source_name_B = [word.replace(' ', '_') for word in risk_source_name_B]
@@ -34,6 +28,7 @@ omitted_word_B = [word for word in risk_source_name_B if word not in valid_risk_
 risk_source_vector_B = [model[word] for word in valid_risk_source_name_B]
 
 dict_risk_source_vectors_B = dict(zip(valid_risk_source_name_B, risk_source_vector_B))
+
 
 def get_vector_for_source_i(a):
     source_name = valid_risk_source_name_B[a]
@@ -50,7 +45,7 @@ mat_xi_300dimB = np.array(xi_vectors_B)
 data_300dimB = mat_xi_300dimB.copy()
 
 data_300dimB = pd.DataFrame(data_300dimB, index=valid_risk_source_name_B)
-
+# ---------------------------------------------------------------RATINGS------------------------------------------------
 risk_ratings_1B_small = risk_ratings_1B.copy()
 
 risk_ratings_1B_small.columns = risk_source_name_B
@@ -66,9 +61,41 @@ risk_ratings_1B_small = risk_ratings_1B_small.astype(float)
 
 mean_rows = risk_ratings_1B_small.mean(axis=1)
 data_300dimB.insert(0, "mean_ratings", mean_rows)
+# ---------------------------------------------------------------END----------------------------------------------------
+# ----------------------------------------------------------RANDOM WORDS------------------------------------------------
+# Get the list of words in the model
+word_list = list(model.index_to_key)
+import random
+random.seed(42)
+# Create a vector of 114 random words
+random_words = np.random.choice(word_list, size=114, replace=False)
+# Get the vector representation of the random words
+random_words_vectors = [model[word] for word in random_words]
+# Create a dictionary with the random words and their vector representation
+dict_random_words_vectors = dict(zip(random_words, random_words_vectors))
 
-X = data_300dimB.drop('mean_ratings', axis=1)
-y = data_300dimB['mean_ratings']
+
+def get_vector_for_source_i(a):
+    source_name = random_words[a]
+    return dict_random_words_vectors[source_name]
+
+
+rand_vectors = []
+for i in range(len(random_words)):
+    xi = get_vector_for_source_i(i)
+    rand_vectors.append(xi)
+
+mat_rand = np.array(rand_vectors)
+
+df_mat_rand = mat_rand.copy()
+
+df_mat_rand = pd.DataFrame(df_mat_rand, index=random_words)
+mean_rows = mean_rows.values
+df_mat_rand.insert(0, "mean_ratings", mean_rows)
+# ---------------------------------------------------------------END----------------------------------------------------
+
+X = df_mat_rand.drop('mean_ratings', axis=1)
+y = df_mat_rand['mean_ratings']
 
 # Define the values of the parameter C to evaluate (SVM, Lasso & Ridge) and K for KNN
 parameter_values = {
@@ -90,7 +117,7 @@ models = {'SVR-RBF': SVR(kernel='rbf'),
 
 # Define the k-fold cross validation parameters
 n_splits = 10
-n_repeats = 1
+n_repeats = 10
 rkf = RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=42)
 
 # create a list of dictionaries to stores the results. (useful to convert/store the results to a different format)
@@ -119,9 +146,8 @@ for model_name, model in tqdm(models.items()):
             results_list_B.append(
                 {'model': model_name, 'parameter': C, 'mean_score_R2': np.mean(scores), 'std_score_R2': np.std(scores)})
 
-
 # Convert the list of results to a pandas DataFrame with the appropriate index
-results_df_B = pd.DataFrame(results_list_B, index=range(len(results_list_B)))
+results_df_random = pd.DataFrame(results_list_B, index=range(len(results_list_B)))
 
 # Save the results dataframe to a csv file
 # results_df_B.to_csv('results_df_1000_customized_1B_AGG.csv', index=False)

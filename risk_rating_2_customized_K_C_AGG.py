@@ -89,7 +89,7 @@ models = {'SVR-RBF': SVR(kernel='rbf'),
           'KNN Regression': KNeighborsRegressor()}
 
 n_splits = 10
-n_repeats = 1000
+n_repeats = 1
 rkf = RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=42)
 
 results_list_2 = []
