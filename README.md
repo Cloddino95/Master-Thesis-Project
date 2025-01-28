@@ -59,8 +59,7 @@ the three datasets. File: “PCA_riskSources.py”
 
 *All the other scripts within Folder*: “**Bhatia’s study**”
 -	“Dataset.py”: in this folder are imported all the datasets related to the three studies. To import all of them is needed 
-the CSV files are found in an external folder, attached to this guide. Namely, external folder name: “Data” -> open folder: “new_data” 
-(inside the new_data folder there are all the CSV files to be imported).
+the CSV files that are found in an external folder, not attached to this repository. Write me an email to receive the label datasets.
 -	“psychometric_1A.py”, “psychometric_1B.py”, “psychometric_2.py” these three scripts run the psychometric experiments for the
 three datasets (1A, 1B, 2) 
 -	“risk_rating_1A_customized_K_C_AGG.py” (semantic approach for dataset 1A), “risk_rating_1B_customized_K_C_AGG.py” 
