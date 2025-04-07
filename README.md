@@ -7,7 +7,7 @@ Licensed under <a href="https://creativecommons.org/licenses/by/4.0/?ref=chooser
 
 - Name: Claudio
 - Surname: Proietti Mercuri
-- Email: cproiettimercuri@gmail.com
+- Email: claudio.proiettimercuri@gmail.com
 
 
 ## Introduction
